@@ -1,0 +1,52 @@
+@font-face {
+  font-family: Inter;
+  src: url('/fonts/InterVariable.woff2') format('woff2');
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+}
+
+:root {
+  color-scheme: light;
+
+  /* Nhận diện chung: đổi font và màu tại đây cho toàn bộ ứng dụng. */
+  --app-font: Inter, ui-sans-serif, system-ui, sans-serif;
+  --primary: #6c4935;
+  --primary-hover: #7c5843;
+  --primary-foreground: #ffffff;
+  --primary-light: #efe5db;
+  --ring-focus: #6c49351a;
+  --border-focus: var(--primary);
+
+  --background: #f3f0e9;
+  --surface: #fffdf9;
+  --foreground: #292622;
+  --muted: #71685e;
+  --border: #e6e0d7;
+  --border-strong: #d9d0c4;
+  --surface-hover: #f8f5ef;
+  --item-hover: #f1ece4;
+  --secondary: #e9e3d9;
+  --secondary-hover: #ddd5c9;
+  --button-hover: #e9e3d9;
+  --surface-overlay: var(--surface);
+  --elevation-popover: 0 8px 24px #29262214;
+
+  --danger: #c70036;
+  --danger-bg: #ff20561a;
+  --success: #007a55;
+  --success-bg: #ecfdf5;
+  --warning: #bb4d00;
+  --warning-bg: #fffbeb;
+
+  --radius-sm: 8px;
+  --radius: 12px;
+  --radius-lg: 16px;
+  --text-xs: 12px;
+  --text-sm: 14px;
+  --text-base: 16px;
+  --text-lg: 18px;
+  --text-xl: 20px;
+  --control-height: 40px;
+  --page-width: 1440px;
+}

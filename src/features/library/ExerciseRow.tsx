@@ -1,5 +1,6 @@
 import { memo } from 'react';
 import type { CSSProperties } from 'react';
+import { Button } from '../../components/ui/Button';
 import type { Exercise } from '../../types';
 import { formatDuration } from '../../utils/format';
 
@@ -7,42 +8,24 @@ export interface ExerciseRowProps {
   exercise: Exercise;
   index: number;
   style?: CSSProperties;
-  onStart: (exercise: Exercise) => void;
-  isSaved?: boolean;
-  isQueued?: boolean;
-  isInRoutine?: boolean;
-  canAddToRoutine?: boolean;
-  onToggleSaved?: (id: string) => void;
-  onAddToSession?: (exercise: Exercise) => void;
-  onAddToRoutine?: (exercise: Exercise) => void;
 }
 
-export const ExerciseRow = memo(function ExerciseRow({
-  exercise, index, style, onStart, isSaved = false, isQueued = false,
-  isInRoutine = false, canAddToRoutine = false,
-  onToggleSaved, onAddToSession, onAddToRoutine,
-}: ExerciseRowProps) {
-  return (
-    <div className="exercise-row" style={style} role="listitem" aria-label={exercise.name}>
-      <span className="row-number">{String(index + 1).padStart(2, '0')}</span>
-      <div className="exercise-identity">
-        <strong title={exercise.name}>{exercise.name}</strong>
-        <span className="mobile-trainer">{exercise.trainer}</span>
-      </div>
-      <span className="trainer-name">{exercise.trainer}</span>
-      <span className="muscle-group">{exercise.group}</span>
-      <span className="duration">{formatDuration(exercise.duration)}</span>
-      <div className="row-actions">
-        <button className="start-button" onClick={() => onStart(exercise)}>Bắt đầu</button>
-        <button className={`save-button ${isSaved ? 'is-saved' : ''}`}
-          aria-label={isSaved ? 'Bỏ lưu' : 'Lưu bài tập'} aria-pressed={isSaved}
-          onClick={() => onToggleSaved?.(exercise.id)}>{isSaved ? '★' : '☆'}</button>
-        <button disabled={isQueued} title={isQueued ? 'Đã có trong buổi tập' : 'Thêm vào buổi tập'}
-          onClick={() => onAddToSession?.(exercise)}>+ Buổi tập</button>
-        <button disabled={!canAddToRoutine || isInRoutine}
-          title={!canAddToRoutine ? 'Tạo và chọn giáo án trước' : isInRoutine ? 'Đã có trong giáo án' : 'Thêm vào giáo án'}
-          onClick={() => onAddToRoutine?.(exercise)}>+ Giáo án</button>
-      </div>
+function ExerciseRow({ exercise, index, style }: ExerciseRowProps) {
+  return <div className="exercise-row" style={style} role="listitem" aria-label={exercise.name}>
+    <span className="row-number">{String(index + 1).padStart(2, '0')}</span>
+    <strong className="exercise-name" title={exercise.name}>{exercise.name}</strong>
+    <span className="trainer-name" title={exercise.trainer}>{exercise.trainer}</span>
+    <span>{exercise.group}</span>
+    <span className="duration">{formatDuration(exercise.duration)}</span>
+    <div className="row-actions">
+      <Button disabled title="Chức năng chưa được triển khai">Bắt đầu</Button>
+      <Button variant="ghost" className="button--icon" disabled aria-label="Lưu bài tập"
+        title="Chức năng chưa được triển khai">☆</Button>
+      <Button disabled title="Chức năng chưa được triển khai">+ Buổi tập</Button>
     </div>
-  );
-});
+  </div>;
+}
+
+const MemoizedExerciseRow = memo(ExerciseRow);
+MemoizedExerciseRow.displayName = 'ExerciseRow';
+export { MemoizedExerciseRow as ExerciseRow };

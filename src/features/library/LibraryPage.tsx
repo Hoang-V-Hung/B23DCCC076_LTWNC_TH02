@@ -1,27 +1,43 @@
-import { memo, useCallback, useMemo, useRef, useState } from 'react';
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { ChangeEvent } from 'react';
 import { areEqual, FixedSizeList } from 'react-window';
 import type { ListChildComponentProps } from 'react-window';
+import { Button } from '../../components/ui/Button';
+import { SelectField } from '../../components/ui/SelectField';
+import type { SelectOption } from '../../components/ui/SelectField';
 import { EXERCISES, GROUPS } from '../../data/exercises';
 import { useDebounce } from '../../hooks/useDebounce';
 import type { Exercise, MuscleGroup } from '../../types';
 import { ExerciseRow } from './ExerciseRow';
 
-interface RowData {
-  exercises: Exercise[];
-  onStart: (exercise: Exercise) => void;
-}
-const VirtualRow = memo(function VirtualRow({ index, style, data }: ListChildComponentProps<RowData>) {
-  return <ExerciseRow exercise={data.exercises[index]} index={index} style={style} onStart={data.onStart} />;
+type SortOrder = 'default' | 'name' | 'duration';
+
+const MUSCLE_OPTIONS: SelectOption<MuscleGroup | ''>[] = [
+  { value: '', label: 'Tất cả' },
+  ...GROUPS.map((group) => ({ value: group, label: group })),
+];
+const SORT_OPTIONS: SelectOption<SortOrder>[] = [
+  { value: 'default', label: 'Mặc định' },
+  { value: 'name', label: 'Tên A–Z' },
+  { value: 'duration', label: 'Thời lượng tăng dần' },
+];
+
+interface RowData { exercises: Exercise[] }
+
+const VirtualRow = memo(function VirtualExerciseRow({ index, style, data }: ListChildComponentProps<RowData>) {
+  return <ExerciseRow exercise={data.exercises[index]} index={index} style={style} />;
 }, areEqual);
+VirtualRow.displayName = 'VirtualRow';
+
 const itemKey = (index: number, data: RowData) => data.exercises[index].id;
 
 export default function LibraryPage() {
   const [keyword, setKeyword] = useState('');
   const [group, setGroup] = useState<MuscleGroup | ''>('');
-  const [sort, setSort] = useState('default');
+  const [sort, setSort] = useState<SortOrder>('default');
   const debouncedKeyword = useDebounce(keyword, 300);
   const listRef = useRef<FixedSizeList<RowData>>(null);
+
   const exercises = useMemo(() => {
     const query = debouncedKeyword.trim().toLocaleLowerCase('vi');
     const result = EXERCISES.filter((exercise) =>
@@ -33,42 +49,72 @@ export default function LibraryPage() {
     return result;
   }, [debouncedKeyword, group, sort]);
 
-  const handleKeywordShift = (event: ChangeEvent<HTMLInputElement>) => {
-    setKeyword(event.target.value);
-  };
-  const handleStart = useCallback((_exercise: Exercise) => {
-    // Nối với Zustand ở Phần 2.
-  }, []);
-  const itemData = useMemo<RowData>(() => ({ exercises, onStart: handleStart }), [exercises, handleStart]);
+  const itemData = useMemo<RowData>(() => ({ exercises }), [exercises]);
+  useEffect(() => { listRef.current?.scrollToItem(0); }, [exercises]);
 
-  return (
-    <main className="page">
-      <div className="page-heading"><div><p className="eyebrow">CHUYỂN ĐỘNG MỖI NGÀY</p>
-        <h1>Kho bài tập<span className="heading-dot">.</span></h1>
-        <p className="page-description">Chọn bài phù hợp. Bắt đầu nhịp tập của bạn.</p></div>
-        <div className="library-total"><strong>10.000</strong><span>bài tập để khám phá</span></div></div>
-      <section className="library-panel" aria-label="Kho bài tập">
-        <div className="filter-bar">
-          <div className="field search-field"><label htmlFor="keyword">Tìm kiếm</label>
-            <input id="keyword" type="search" placeholder="Tên bài tập hoặc huấn luyện viên…"
-              value={keyword} onChange={handleKeywordShift} /></div>
-          <div className="field"><label htmlFor="group">Nhóm cơ</label>
-            <select id="group" value={group} onChange={(event) => { setGroup(event.target.value as MuscleGroup | ''); listRef.current?.scrollToItem(0); }}>
-              <option value="">Tất cả</option>{GROUPS.map((item) => <option key={item}>{item}</option>)}
-            </select></div>
-          <div className="field"><label htmlFor="sort">Sắp xếp</label>
-            <select id="sort" value={sort} onChange={(event) => { setSort(event.target.value); listRef.current?.scrollToItem(0); }}>
-              <option value="default">Mặc định</option><option value="name">Tên A–Z</option>
-              <option value="duration">Thời lượng tăng dần</option></select></div>
+  const handleKeywordChange = useCallback((event: ChangeEvent<HTMLInputElement>) => {
+    setKeyword(event.target.value);
+  }, []);
+  const handleClearKeyword = useCallback(() => setKeyword(''), []);
+  const handleGroupChange = useCallback((value: MuscleGroup | '') => setGroup(value), []);
+  const handleSortChange = useCallback((value: SortOrder) => setSort(value), []);
+  const handleResetFilters = useCallback(() => {
+    setKeyword(''); setGroup(''); setSort('default');
+  }, []);
+  const hasFilters = Boolean(keyword || group || sort !== 'default');
+
+  return <main className="page">
+    <header className="page-heading">
+      <h1>Kho bài tập</h1>
+      <p>Tìm bài theo tên, huấn luyện viên hoặc nhóm cơ.</p>
+    </header>
+
+    <section className="library" aria-label="Kho bài tập">
+      <div className="filter-bar">
+        <div className="field search-field">
+          <label className="field-label" htmlFor="keyword">Tìm kiếm</label>
+          <div className="search-control">
+            <input className="input" id="keyword" type="search" value={keyword}
+              onChange={handleKeywordChange} placeholder="Tên bài tập hoặc huấn luyện viên"
+              autoComplete="off" spellCheck={false} />
+            {keyword && <Button variant="ghost" className="search-clear" aria-label="Xóa tìm kiếm"
+              onClick={handleClearKeyword}>×</Button>}
+          </div>
         </div>
-        <div className="results-line"><p role="status">Tìm thấy {exercises.length} bài tập</p><span>30–120 giây / bài</span></div>
-        <div className="table-scroll"><div className="table-inner">
-          <div className="table-heading" aria-hidden="true"><span>#</span><span>Bài tập</span><span>Huấn luyện viên</span><span>Nhóm cơ</span><span>Thời lượng</span><span>Thao tác</span></div>
+        <SelectField id="group" label="Nhóm cơ" value={group}
+          options={MUSCLE_OPTIONS} onChange={handleGroupChange} />
+        <SelectField id="sort" label="Sắp xếp" value={sort}
+          options={SORT_OPTIONS} onChange={handleSortChange} />
+      </div>
+
+      <div className="results-line">
+        <p role="status" className="results-count">Tìm thấy {exercises.length} bài tập</p>
+        <div className="results-actions">
+          <span className="results-meta">30–120 giây mỗi bài</span>
+          <Button variant="ghost" className="reset-filters" onClick={handleResetFilters}
+            data-hidden={!hasFilters} aria-hidden={!hasFilters} disabled={!hasFilters}>Đặt lại</Button>
+        </div>
+      </div>
+
+      <div className="table-scroll" data-empty={!exercises.length}
+        tabIndex={exercises.length ? 0 : undefined} role="region"
+        aria-label={exercises.length ? 'Bảng bài tập, cuộn ngang để xem đủ các cột' : 'Kết quả tìm kiếm'}>
+        <div className="table-inner" role={exercises.length ? 'list' : undefined} aria-label="Danh sách bài tập">
+          <div className="table-heading" aria-hidden="true">
+            <span>#</span><span>Bài tập</span><span>Huấn luyện viên</span>
+            <span>Nhóm cơ</span><span>Thời lượng</span><span className="actions-heading">Thao tác</span>
+          </div>
           {exercises.length ? <FixedSizeList ref={listRef} height={560} itemSize={56} width="100%"
-            itemCount={exercises.length} itemData={itemData} itemKey={itemKey} overscanCount={2} role="list">
-            {VirtualRow}</FixedSizeList> : <div className="empty-state"><h2>Không tìm thấy bài tập nào</h2><p>Thử một từ khóa khác hoặc đổi nhóm cơ.</p></div>}
-        </div></div>
-      </section>
-    </main>
-  );
+            itemCount={exercises.length} itemData={itemData} itemKey={itemKey} overscanCount={2}>
+            {VirtualRow}
+          </FixedSizeList> : <div className="empty-state library-empty">
+            <h2>Không tìm thấy bài tập nào</h2>
+            <p>Thử một từ khóa khác hoặc đổi nhóm cơ.</p>
+            <Button onClick={handleResetFilters}>Xóa bộ lọc</Button>
+          </div>}
+        </div>
+      </div>
+      <p className="mobile-scroll-note">Vuốt ngang để xem đủ thông tin.</p>
+    </section>
+  </main>;
 }

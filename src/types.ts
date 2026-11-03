@@ -8,8 +8,3 @@ export interface Exercise {
   duration: number;
 }
 
-export interface Routine {
-  id: string;
-  name: string;
-  exerciseIds: string[];
-}
