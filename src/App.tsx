@@ -1,20 +1,14 @@
+import { lazy, Suspense } from 'react';
 import { NavLink, Route, Routes } from 'react-router-dom';
 import { ProductBrand } from './components/brand/ProductBrand';
 import { ScrollbarAutohide } from './components/ui/ScrollbarAutohide';
+import { ThemeToggle } from './components/ui/ThemeToggle';
 import LibraryPage from './features/library/LibraryPage';
-import SavedPage from './features/saved/SavedPage';
 import { SessionBar } from './features/session/SessionBar';
 
-function PendingPage({ title }: { title: string }) {
-  return <main className="page">
-    <header className="page-heading"><h1>{title}</h1></header>
-    <section className="empty-state" aria-label={title}>
-      <h2>Chức năng chưa được triển khai</h2>
-      <p>Anh có thể tiếp tục khám phá các bài tập trong kho.</p>
-      <NavLink className="button button--outline" to="/">Về kho bài tập</NavLink>
-    </section>
-  </main>;
-}
+const SavedPage = lazy(() => import('./features/saved/SavedPage'));
+const RoutinesPage = lazy(() => import('./features/routines/RoutinesPage'));
+const RoutineDetailPage = lazy(() => import('./features/routines/RoutineDetailPage'));
 
 export default function App() {
   return <div className="app app--with-session">
@@ -26,19 +20,22 @@ export default function App() {
           <NavLink className="nav-item" end to="/">Kho bài tập</NavLink>
           <NavLink className="nav-item" to="/saved">Đã lưu</NavLink>
           <NavLink className="nav-item" to="/routines">Giáo án</NavLink>
+          <ThemeToggle />
         </nav>
       </div>
     </header>
-    <Routes>
+    <Suspense fallback={<main className="page"><p role="status">Đang tải trang...</p></main>}>
+      <Routes>
       <Route path="/" element={<LibraryPage />} />
       <Route path="/saved" element={<SavedPage />} />
-      <Route path="/routines" element={<PendingPage title="Giáo án" />} />
-      <Route path="/routines/:id" element={<PendingPage title="Chi tiết giáo án" />} />
+      <Route path="/routines" element={<RoutinesPage />} />
+      <Route path="/routines/:id" element={<RoutineDetailPage />} />
       <Route path="*" element={<main className="page">
         <header className="page-heading"><h1>Không tìm thấy trang</h1></header>
         <NavLink className="button button--outline" to="/">Về kho bài tập</NavLink>
       </main>} />
-    </Routes>
+      </Routes>
+    </Suspense>
     <SessionBar />
   </div>;
 }

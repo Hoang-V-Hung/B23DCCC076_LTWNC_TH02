@@ -13,6 +13,7 @@ interface SelectFieldProps<Value extends string> {
   value: Value;
   options: readonly SelectOption<Value>[];
   onChange: (value: Value) => void;
+  disabled?: boolean;
 }
 
 interface MenuPosition {
@@ -23,7 +24,7 @@ interface MenuPosition {
 }
 
 export function SelectField<Value extends string>({
-  id, label, value, options, onChange,
+  id, label, value, options, onChange, disabled = false,
 }: SelectFieldProps<Value>) {
   const [open, setOpen] = useState(false);
   const [activeIndex, setActiveIndex] = useState(0);
@@ -138,7 +139,7 @@ export function SelectField<Value extends string>({
   return <div className="field">
     <label className="field-label" htmlFor={id} id={`${id}-label`}>{label}</label>
     <button ref={triggerRef} id={id} type="button" className="select-trigger"
-      role="combobox" aria-haspopup="listbox" aria-expanded={open} disabled={!options.length}
+      role="combobox" aria-haspopup="listbox" aria-expanded={open} disabled={disabled || !options.length}
       aria-controls={open ? menuId : undefined}
       aria-activedescendant={open ? `${id}-option-${activeIndex}` : undefined}
       aria-labelledby={`${id}-label ${id}-value`}

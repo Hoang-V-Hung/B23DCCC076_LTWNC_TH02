@@ -2,6 +2,7 @@ import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { ChangeEvent } from 'react';
 import { areEqual, FixedSizeList } from 'react-window';
 import type { ListChildComponentProps } from 'react-window';
+import { NavLink } from 'react-router-dom';
 import { Button } from '../../components/ui/Button';
 import { SelectField } from '../../components/ui/SelectField';
 import type { SelectOption } from '../../components/ui/SelectField';
@@ -10,6 +11,7 @@ import { useDebounce } from '../../hooks/useDebounce';
 import type { Exercise, MuscleGroup } from '../../types';
 import { useSavedStore } from '../saved/useSavedStore';
 import { useSessionStore } from '../session/useSessionStore';
+import { useRoutineDispatch, useRoutines } from '../routines/RoutineContext';
 import { ExerciseRow } from './ExerciseRow';
 
 type SortOrder = 'default' | 'name' | 'duration';
@@ -30,6 +32,8 @@ interface RowData {
   onStart: (exercise: Exercise) => void;
   onToggleSaved: (id: string) => void;
   onAddToSession: (exercise: Exercise) => void;
+  routineExerciseIds: Set<string>;
+  onAddToRoutine?: (exercise: Exercise) => void;
 }
 
 const VirtualRow = memo(function VirtualExerciseRow({ index, style, data }: ListChildComponentProps<RowData>) {
@@ -37,7 +41,8 @@ const VirtualRow = memo(function VirtualExerciseRow({ index, style, data }: List
   const isSaved = useSavedStore((state) => state.ids.includes(exercise.id));
   return <ExerciseRow exercise={exercise} index={index} style={style}
     isSaved={isSaved} isQueued={data.queuedIds.has(exercise.id)}
-    onStart={data.onStart} onToggleSaved={data.onToggleSaved} onAddToSession={data.onAddToSession} />;
+    onStart={data.onStart} onToggleSaved={data.onToggleSaved} onAddToSession={data.onAddToSession}
+    showRoutineAction isInRoutine={data.routineExerciseIds.has(exercise.id)} onAddToRoutine={data.onAddToRoutine} />;
 }, areEqual);
 VirtualRow.displayName = 'VirtualRow';
 
@@ -47,6 +52,14 @@ export default function LibraryPage() {
   const [keyword, setKeyword] = useState('');
   const [group, setGroup] = useState<MuscleGroup | ''>('');
   const [sort, setSort] = useState<SortOrder>('default');
+  const [selectedRoutineId, setSelectedRoutineId] = useState('');
+  const routines = useRoutines();
+  const dispatch = useRoutineDispatch();
+  const selectedRoutine = routines.find((routine) => routine.id === selectedRoutineId) ?? routines[0];
+  const routineOptions = useMemo<SelectOption<string>[]>(() => routines.length
+    ? routines.map((routine) => ({ value: routine.id, label: routine.name }))
+    : [{ value: '', label: 'Chưa có giáo án' }], [routines]);
+  const routineExerciseIds = useMemo(() => new Set(selectedRoutine?.exerciseIds ?? []), [selectedRoutine]);
   const debouncedKeyword = useDebounce(keyword, 300);
   const listRef = useRef<FixedSizeList<RowData>>(null);
   const queue = useSessionStore((state) => state.queue);
@@ -70,9 +83,14 @@ export default function LibraryPage() {
     const index = exercises.findIndex((item) => item.id === exercise.id);
     if (index !== -1) startSession(exercises, index);
   }, [exercises, startSession]);
+  const handleAddToRoutine = useCallback((exercise: Exercise) => {
+    if (selectedRoutine) dispatch({ type: 'addExercise', routineId: selectedRoutine.id, exerciseId: exercise.id });
+  }, [dispatch, selectedRoutine]);
+  const handleRoutineChange = useCallback((id: string) => setSelectedRoutineId(id), []);
   const itemData = useMemo<RowData>(() => ({
     exercises, queuedIds, onStart: handleStart, onToggleSaved: toggleSaved, onAddToSession: addToSession,
-  }), [exercises, queuedIds, handleStart, toggleSaved, addToSession]);
+    routineExerciseIds, onAddToRoutine: selectedRoutine ? handleAddToRoutine : undefined,
+  }), [exercises, queuedIds, handleStart, toggleSaved, addToSession, routineExerciseIds, selectedRoutine, handleAddToRoutine]);
   useEffect(() => { listRef.current?.scrollToItem(0); }, [exercises]);
 
   const handleKeywordChange = useCallback((event: ChangeEvent<HTMLInputElement>) => {
@@ -110,6 +128,14 @@ export default function LibraryPage() {
           options={SORT_OPTIONS} onChange={handleSortChange} />
       </div>
 
+      <div className="routine-target">
+        <SelectField id="selected-routine" label="Giáo án đang chọn" value={selectedRoutine?.id ?? ''}
+          options={routineOptions} onChange={handleRoutineChange} disabled={!routines.length} />
+        <p>{selectedRoutine
+          ? <>Thêm bài bằng nút + Giáo án. <NavLink to={`/routines/${encodeURIComponent(selectedRoutine.id)}`}>Xem giáo án</NavLink></>
+          : <>Tạo giáo án để gom bài tập theo từng buổi. <NavLink to="/routines">Tạo giáo án</NavLink></>}</p>
+      </div>
+
       <div className="results-line">
         <p role="status" className="results-count">Tìm thấy {exercises.length} bài tập</p>
         <div className="results-actions">
@@ -119,7 +145,7 @@ export default function LibraryPage() {
         </div>
       </div>
 
-      <div className="table-scroll" data-empty={!exercises.length}
+      <div className="table-scroll library-routines-table" data-empty={!exercises.length}
         tabIndex={exercises.length ? 0 : undefined} role="region"
         aria-label={exercises.length ? 'Bảng bài tập, cuộn ngang để xem đủ các cột' : 'Kết quả tìm kiếm'}>
         <div className="table-inner" role={exercises.length ? 'list' : undefined} aria-label="Danh sách bài tập">

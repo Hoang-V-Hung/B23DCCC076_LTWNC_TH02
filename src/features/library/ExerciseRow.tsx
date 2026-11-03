@@ -13,11 +13,15 @@ export interface ExerciseRowProps {
   onStart?: (exercise: Exercise) => void;
   onToggleSaved?: (id: string) => void;
   onAddToSession?: (exercise: Exercise) => void;
+  showRoutineAction?: boolean;
+  isInRoutine?: boolean;
+  onAddToRoutine?: (exercise: Exercise) => void;
 }
 
 function ExerciseRow({
   exercise, index, style, isSaved = false, isQueued = false,
   onStart, onToggleSaved, onAddToSession,
+  showRoutineAction = false, isInRoutine = false, onAddToRoutine,
 }: ExerciseRowProps) {
   return <div className="exercise-row" style={style} role="listitem" aria-label={exercise.name}>
     <span className="row-number">{String(index + 1).padStart(2, '0')}</span>
@@ -35,6 +39,11 @@ function ExerciseRow({
         title={isQueued ? 'Bài đã có trong buổi tập' : 'Thêm vào buổi tập'}>
         {isQueued ? 'Đã thêm' : '+ Buổi tập'}
       </Button>
+      {showRoutineAction && <Button onClick={() => onAddToRoutine?.(exercise)}
+        disabled={!onAddToRoutine || isInRoutine}
+        title={isInRoutine ? 'Bài đã có trong giáo án' : onAddToRoutine ? 'Thêm vào giáo án đã chọn' : 'Tạo và chọn giáo án trước'}>
+        + Giáo án
+      </Button>}
     </div>
   </div>;
 }

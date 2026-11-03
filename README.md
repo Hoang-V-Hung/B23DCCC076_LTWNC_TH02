@@ -1,6 +1,6 @@
-# Nhịp Tập - LTWNC TH02, Phần 1 và 2
+# Nhịp Tập - LTWNC TH02, Phần 1–3
 
-Đã triển khai **Phần 1: Kho 10.000 bài tập** và **Phần 2: Đồng hồ buổi tập, bài tập đã lưu bằng Zustand**. Phần 3 và 4 chỉ thực hiện khi người dùng yêu cầu.
+Đã triển khai **Phần 1: Kho 10.000 bài tập**, **Phần 2: Đồng hồ buổi tập, bài tập đã lưu bằng Zustand** và **Phần 3: Giáo án, giao diện sáng/tối, tải trang theo route**. Phần 4 chỉ thực hiện khi người dùng yêu cầu.
 
 ## Chạy ứng dụng
 
@@ -30,7 +30,7 @@ npm run preview
 - `src/components/ui/ScrollbarAutohide.tsx`: thanh cuộn mảnh, hiện khi rê chuột hoặc đang cuộn, dọn listener và timer khi unmount.
 - Font Inter được phục vụ từ `public/fonts/InterVariable.woff2`; giấy phép trong `public/fonts/LICENSE-Inter.txt`. Ứng dụng không cần gọi Google Fonts khi chạy.
 
-Trang `/saved` và thanh buổi tập dùng cùng header, kiểu chữ, nút và màu sắc. `/routines`, `/routines/:id` vẫn là trang khung; chưa triển khai giáo án, sáng/tối hoặc bộ kiểm thử của Phần 4.
+Trang `/saved`, `/routines`, `/routines/:id` và thanh buổi tập dùng cùng header, kiểu chữ, nút và màu sắc. Chế độ tối chuyển sang nền nâu đen, giữ điểm nhấn nâu ấm; tất cả màu ở `tokens.css`. Chưa triển khai bộ kiểm thử của Phần 4.
 
 Khi triển khai phần sau, tái sử dụng component và token trên. Ô nhập dùng `.input`, nhãn dùng `.field-label`, tên trang dùng `.page-heading`; tránh thêm bảng màu hoặc font riêng theo từng trang.
 
@@ -83,6 +83,37 @@ Khi triển khai phần sau, tái sử dụng component và token trên. Ô nh�
 | Gõ `xyz` | Không tìm thấy bài tập nào |
 | Xóa tìm kiếm, chọn Tên A-Z | Dòng đầu: Bật chậm 1 |
 | Mở DevTools Elements | Khoảng 10-15 dòng được mount khi mở danh sách |
+
+## Nội dung Phần 3
+
+- `src/features/routines/routineReducer.ts`: kiểu `Routine`, discriminated union `RoutineAction`, reducer thuần với `create`, `rename`, `remove`, `addExercise`, `removeExercise`. Không sửa state gốc; thêm bài trùng hoặc thao tác với ID không tồn tại giữ nguyên state.
+- `withLogger.ts`: bọc reducer, chỉ log action và state trước/sau khi `import.meta.env.DEV`. Bản production không ghi log này.
+- `RoutineContext.tsx`: tách `RoutineStateContext` và `RoutineDispatchContext`, cung cấp `useRoutines` và `useRoutineDispatch`; hook báo lỗi rõ khi dùng ngoài provider. Khởi tạo giáo án từ localStorage key `workout-routines` và lưu mỗi khi danh sách thay đổi.
+- Form tạo giáo án chỉ dùng Context dispatch. Callback kiểm tra tên giữ tham chiếu ổn định, đọc danh sách mới nhất lúc gửi; form được `memo` để cập nhật giáo án không buộc form render lại.
+- `/routines`: tạo, đếm số bài, mở chi tiết và xóa giáo án. Tên được trim; chặn tên trống và tên trùng không phân biệt hoa/thường.
+- Kho bài tập có ô **Giáo án đang chọn** và nút **+ Giáo án** trên từng dòng. Chưa có giáo án thì nút bị khóa; bài đã có cũng bị khóa để tránh thêm trùng. Ô chọn dùng chung `SelectField`, bảng giữ dòng 56px và cuộn ngang khi cần.
+- `/routines/:id`: hiển thị tên, các bài và nút Bỏ; tính tổng thời gian bằng `reduce`; **Tập tất cả** đưa đúng thứ tự bài trong giáo án vào Zustand session. Có trạng thái giáo án rỗng và không tìm thấy giáo án.
+- `src/contexts/ThemeContext.tsx`: Context riêng chứa `theme: 'light' | 'dark'` và `toggleTheme`, value bọc `useMemo`. Nút trên menu đổi nhãn Giao diện tối/Giao diện sáng. Lựa chọn được nhớ ở `workout-theme`.
+- Ba trang Đã lưu, Giáo án và Chi tiết giáo án dùng `React.lazy` + `Suspense` với trạng thái Đang tải trang...; build tạo ba file JS riêng. Header và thanh đồng hồ nằm ngoài Suspense nên tiếp tục hiển thị khi tải route.
+
+## Kiểm tra Phần 3
+
+| Thao tác | Kết quả mong đợi |
+| --- | --- |
+| Gửi tên rỗng hoặc toàn khoảng trắng | Tên giáo án không được để trống |
+| Tạo `Ngày ngực`, sau đó tạo `ngày NGỰC` | Tên giáo án đã tồn tại |
+| Chọn Ngày ngực trong Kho bài tập, thêm e1, e2, thêm lại e1 | Giáo án có đúng 2 bài |
+| Mở chi tiết giáo án trên | Tổng thời gian: 1 phút 37 giây |
+| Bấm Tập tất cả | Đang tập Đẩy tạ đơn 1, HLV Minh Khang; buổi tập 2 bài |
+| F5 ở trang chi tiết | Giáo án vẫn giữ đủ bài |
+| Bỏ e1 ở chi tiết | Còn e2; tổng thời gian 1 phút 7 giây |
+| Mở `/routines/khong-ton-tai` | Không tìm thấy giáo án |
+| Chuyển Giao diện tối rồi sang các trang khác | Header, bảng, form và thanh đồng hồ cùng chuyển màu |
+| Mở Console khi thêm bài ở bản dev | Thấy log addExercise, state trước/sau |
+| Mở Network rồi vào Giáo án lần đầu | Trình duyệt tải file JS của trang Giáo án khi vào route |
+| Chạy `npm run build` | Có SavedPage, RoutinesPage, RoutineDetailPage thành file JS riêng |
+
+Cách tách Context và tải component theo route theo tài liệu [React Context + reducer](https://react.dev/learn/scaling-up-with-reducer-and-context) và [React.lazy](https://react.dev/reference/react/lazy).
 
 Trên màn hình nhỏ, bộ lọc xếp dọc và vùng bảng cuộn ngang riêng để giữ đầy đủ các cột và chiều cao dòng 56px.
 
