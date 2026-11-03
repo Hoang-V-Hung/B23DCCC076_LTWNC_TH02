@@ -24,3 +24,4 @@ export const generateExercises = (count: number): Exercise[] =>
 
 // Sinh đúng một lần, không tạo lại 10.000 object khi component render.
 export const EXERCISES = generateExercises(10000);
+export const EXERCISE_BY_ID = new Map(EXERCISES.map((exercise) => [exercise.id, exercise]));

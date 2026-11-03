@@ -1,6 +1,6 @@
-# Nhịp Tập - LTWNC TH02, Phần 1
+# Nhịp Tập - LTWNC TH02, Phần 1 và 2
 
-Hiện tại chỉ triển khai chức năng **Phần 1: Kho 10.000 bài tập**. Phần 2, 3 và 4 chỉ thực hiện khi người dùng yêu cầu.
+Đã triển khai **Phần 1: Kho 10.000 bài tập** và **Phần 2: Đồng hồ buổi tập, bài tập đã lưu bằng Zustand**. Phần 3 và 4 chỉ thực hiện khi người dùng yêu cầu.
 
 ## Chạy ứng dụng
 
@@ -30,7 +30,7 @@ npm run preview
 - `src/components/ui/ScrollbarAutohide.tsx`: thanh cuộn mảnh, hiện khi rê chuột hoặc đang cuộn, dọn listener và timer khi unmount.
 - Font Inter được phục vụ từ `public/fonts/InterVariable.woff2`; giấy phép trong `public/fonts/LICENSE-Inter.txt`. Ứng dụng không cần gọi Google Fonts khi chạy.
 
-Các trang khung `/saved`, `/routines`, `/routines/:id` đã dùng cùng header, kiểu chữ, nút và trạng thái rỗng. Chưa có logic lưu bài, buổi tập, giáo án, sáng/tối hoặc bộ kiểm thử của các phần tiếp theo.
+Trang `/saved` và thanh buổi tập dùng cùng header, kiểu chữ, nút và màu sắc. `/routines`, `/routines/:id` vẫn là trang khung; chưa triển khai giáo án, sáng/tối hoặc bộ kiểm thử của Phần 4.
 
 Khi triển khai phần sau, tái sử dụng component và token trên. Ô nhập dùng `.input`, nhãn dùng `.field-label`, tên trang dùng `.page-heading`; tránh thêm bảng màu hoặc font riêng theo từng trang.
 
@@ -45,7 +45,32 @@ Khi triển khai phần sau, tái sử dụng component và token trên. Ô nh�
 - Lọc/sắp xếp dùng `useMemo`, không sửa dữ liệu gốc. Row dùng `React.memo`, itemData ổn định khi đang gõ trước thời điểm debounce.
 - Có xóa tìm kiếm, đặt lại bộ lọc và trạng thái không tìm thấy.
 
-Các nút Bắt đầu, Lưu bài tập và + Buổi tập đang bị khóa, chờ yêu cầu triển khai Phần 2.
+## Nội dung Phần 2
+
+- `src/features/session/useSessionStore.ts`: Zustand store chứa hàng đợi bài tập, vị trí hiện tại, trạng thái chạy và số giây đã tập. Có đủ `startSession`, `toggleRun`, `next`, `prev`, `addToSession`, `tick`.
+- Bấm **Bắt đầu** ở một dòng để lấy toàn bộ danh sách đang lọc/sắp xếp làm buổi tập và bắt đầu đúng bài đó. Thay bộ lọc sau đó không làm đổi buổi tập đang chạy.
+- **+ Buổi tập** thêm vào cuối hàng đợi, bỏ qua ID trùng. Khi chưa chọn bài, có thể thêm vài bài rồi bấm Bắt đầu ở thanh dưới.
+- `SessionBar` cố định ở đáy mọi trang, hiển thị tên bài, huấn luyện viên, số bài, thời gian còn lại và tiến trình. Chừa khoảng trống theo chiều cao thực tế để không che nội dung trên màn hình nhỏ.
+- Chỉ có một interval 1000ms khi đang chạy, được dọn khi tạm dừng hoặc unmount. Chỉ `CountdownBar` đăng ký đọc `elapsed`; trang danh sách và nút điều khiển không đăng ký giá trị thay đổi mỗi giây.
+- Hết thời lượng tự sang bài sau; hết bài cuối thì dừng. Nút Sau ở bài cuối cũng dừng. Nút Trước đặt lại bài hiện tại nếu đã quá 3 giây, nếu chưa thì lùi một bài; ở bài đầu luôn đặt lại về 0.
+- `src/features/saved/useSavedStore.ts`: store riêng dùng `persist`, chỉ lưu `ids` vào localStorage với key `workout-saved`. Ngôi sao đổi ☆/★, có nhãn truy cập Lưu bài tập/Bỏ lưu.
+- `/saved` liệt kê bài đã lưu theo thứ tự lưu, cho bỏ lưu, thêm vào buổi tập, bắt đầu từ một bài hoặc **Tập tất cả**. Tải lại trang vẫn giữ bài đã lưu; hàng đợi và đồng hồ không được lưu.
+
+## Kiểm tra Phần 2
+
+| Thao tác | Kết quả mong đợi |
+| --- | --- |
+| Bắt đầu ở dòng 2 (e2) | Kéo tạ đơn 1, HLV Phương Anh; còn 1:07, sau 5 giây còn 1:02 |
+| Tạm dừng, đợi 3 giây | Thời gian đứng yên; Bắt đầu chạy tiếp |
+| Bấm Sau từ e2 | Gập tạ đơn 1, HLV Đức Anh, còn 1:44 |
+| Bắt đầu e1, chờ 30 giây | Tự chuyển sang e2 |
+| Tìm `đẩy`, bắt đầu dòng đầu rồi bấm Sau | Bài tiếp theo vẫn có chữ Đẩy |
+| Bấm Trước ở e2 sau 4 giây | Vẫn e2, thời gian về đầu bài |
+| Bấm Trước ở e2 trong 3 giây đầu | Trở lại e1 |
+| Thêm cùng một bài hai lần | Chỉ xuất hiện một lần trong số bài của buổi tập |
+| Lưu e1, e3 rồi mở `/saved` và F5 | Vẫn có hai bài, localStorage `workout-saved` chứa e1 và e3 |
+| Bấm Tập tất cả ở `/saved` | Buổi tập gồm đúng các bài đã lưu |
+| Bật Highlight updates khi đồng hồ chạy | Mỗi giây chỉ phần thời gian và tiến trình cập nhật |
 
 ## Kiểm tra Phần 1
 

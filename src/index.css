@@ -91,12 +91,48 @@ h1, h2, h3, p { margin: 0; }
 .row-actions { display: flex; justify-content: flex-end; align-items: center; gap: 8px; }
 .row-actions .button { min-height: 32px; height: 32px; padding: 4px 10px; border-radius: var(--radius-sm); font-size: var(--text-xs); white-space: nowrap; }
 .row-actions .button--icon { width: 32px; padding-inline: 0; font-size: 18px; }
+.row-actions .button--saved { color: var(--primary); }
 .empty-state { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 320px; padding: 40px 24px; background: var(--surface); text-align: center; }
 .empty-state h2 { font-size: var(--text-base); font-weight: 500; }
 .empty-state p { max-width: 50ch; margin-top: 8px; color: var(--muted); }
 .empty-state .button { margin-top: 24px; }
 .library-empty { min-height: 600px; }
 .mobile-scroll-note { display: none; margin-top: 12px; color: var(--muted); font-size: var(--text-xs); }
+
+/* Buổi tập luôn hiện ở đáy, chừa khoảng trống theo chiều cao thực tế của thanh. */
+.app--with-session .page { padding-bottom: calc(var(--session-bar-height, 112px) + 40px); }
+.session-bar { position: fixed; z-index: 50; right: 0; bottom: 0; left: 0; padding-bottom: env(safe-area-inset-bottom); border-top: 1px solid var(--border-strong); background: var(--surface); }
+.session-inner { display: grid; grid-template-columns: minmax(0, 1fr) minmax(200px, 280px) auto; align-items: center; gap: 32px; width: 100%; max-width: var(--page-width); min-height: 104px; margin-inline: auto; padding: 20px 32px; }
+.session-info { min-width: 0; }
+.session-title { overflow-wrap: anywhere; }
+.session-title strong { font-weight: 600; }
+.session-count { margin-top: 4px; color: var(--muted); font-size: var(--text-xs); }
+.session-controls { display: flex; align-items: center; gap: 8px; }
+.session-controls .button { white-space: nowrap; }
+.session-controls .button--primary { min-width: 108px; }
+.countdown { min-width: 0; }
+.countdown-label { display: flex; justify-content: space-between; align-items: baseline; gap: 16px; margin-bottom: 8px; font-variant-numeric: tabular-nums; }
+.countdown-label strong { font-size: var(--text-lg); font-weight: 600; }
+.countdown-percentage { color: var(--muted); font-size: var(--text-xs); }
+.countdown-progress { display: block; appearance: none; width: 100%; height: 6px; overflow: hidden; border: 0; border-radius: 3px; color: var(--primary); background: var(--secondary); }
+.countdown-progress::-webkit-progress-bar { border-radius: 3px; background: var(--secondary); }
+.countdown-progress::-webkit-progress-value { border-radius: 3px; background: var(--primary); }
+.countdown-progress::-moz-progress-bar { border-radius: 3px; background: var(--primary); }
+
+@media (max-width: 1000px) {
+  .session-inner { grid-template-columns: minmax(0, 1fr) auto; gap: 16px 24px; }
+  .session-info { grid-column: 1 / -1; }
+}
+@media (max-width: 800px) {
+  .session-inner { padding-inline: 24px; }
+}
+@media (max-width: 560px) {
+  .session-inner { grid-template-columns: minmax(0, 1fr); gap: 12px; padding: 16px; }
+  .session-controls { display: grid; grid-template-columns: 1fr 1.4fr 1fr; }
+  .session-controls .button--primary { min-width: 0; }
+  .session-title { font-size: var(--text-xs); }
+  .app--with-session .page { padding-bottom: calc(var(--session-bar-height, 216px) + 24px); }
+}
 
 /* Thanh cuộn giữ nguyên bề rộng khi hiện/ẩn. */
 * { --scrollbar-thumb: transparent; }

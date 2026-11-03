@@ -8,9 +8,17 @@ export interface ExerciseRowProps {
   exercise: Exercise;
   index: number;
   style?: CSSProperties;
+  isSaved?: boolean;
+  isQueued?: boolean;
+  onStart?: (exercise: Exercise) => void;
+  onToggleSaved?: (id: string) => void;
+  onAddToSession?: (exercise: Exercise) => void;
 }
 
-function ExerciseRow({ exercise, index, style }: ExerciseRowProps) {
+function ExerciseRow({
+  exercise, index, style, isSaved = false, isQueued = false,
+  onStart, onToggleSaved, onAddToSession,
+}: ExerciseRowProps) {
   return <div className="exercise-row" style={style} role="listitem" aria-label={exercise.name}>
     <span className="row-number">{String(index + 1).padStart(2, '0')}</span>
     <strong className="exercise-name" title={exercise.name}>{exercise.name}</strong>
@@ -18,10 +26,15 @@ function ExerciseRow({ exercise, index, style }: ExerciseRowProps) {
     <span>{exercise.group}</span>
     <span className="duration">{formatDuration(exercise.duration)}</span>
     <div className="row-actions">
-      <Button disabled title="Chức năng chưa được triển khai">Bắt đầu</Button>
-      <Button variant="ghost" className="button--icon" disabled aria-label="Lưu bài tập"
-        title="Chức năng chưa được triển khai">☆</Button>
-      <Button disabled title="Chức năng chưa được triển khai">+ Buổi tập</Button>
+      <Button onClick={() => onStart?.(exercise)} disabled={!onStart}>Bắt đầu</Button>
+      <Button variant="ghost" className={`button--icon${isSaved ? ' button--saved' : ''}`}
+        onClick={() => onToggleSaved?.(exercise.id)} disabled={!onToggleSaved}
+        aria-label={isSaved ? 'Bỏ lưu' : 'Lưu bài tập'} aria-pressed={isSaved}
+        title={isSaved ? 'Bỏ lưu' : 'Lưu bài tập'}>{isSaved ? '★' : '☆'}</Button>
+      <Button onClick={() => onAddToSession?.(exercise)} disabled={!onAddToSession || isQueued}
+        title={isQueued ? 'Bài đã có trong buổi tập' : 'Thêm vào buổi tập'}>
+        {isQueued ? 'Đã thêm' : '+ Buổi tập'}
+      </Button>
     </div>
   </div>;
 }

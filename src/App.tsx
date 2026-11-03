@@ -2,6 +2,8 @@ import { NavLink, Route, Routes } from 'react-router-dom';
 import { ProductBrand } from './components/brand/ProductBrand';
 import { ScrollbarAutohide } from './components/ui/ScrollbarAutohide';
 import LibraryPage from './features/library/LibraryPage';
+import SavedPage from './features/saved/SavedPage';
+import { SessionBar } from './features/session/SessionBar';
 
 function PendingPage({ title }: { title: string }) {
   return <main className="page">
@@ -15,7 +17,7 @@ function PendingPage({ title }: { title: string }) {
 }
 
 export default function App() {
-  return <div className="app">
+  return <div className="app app--with-session">
     <ScrollbarAutohide />
     <header className="app-header">
       <div className="header-inner">
@@ -29,7 +31,7 @@ export default function App() {
     </header>
     <Routes>
       <Route path="/" element={<LibraryPage />} />
-      <Route path="/saved" element={<PendingPage title="Bài tập đã lưu" />} />
+      <Route path="/saved" element={<SavedPage />} />
       <Route path="/routines" element={<PendingPage title="Giáo án" />} />
       <Route path="/routines/:id" element={<PendingPage title="Chi tiết giáo án" />} />
       <Route path="*" element={<main className="page">
@@ -37,5 +39,6 @@ export default function App() {
         <NavLink className="button button--outline" to="/">Về kho bài tập</NavLink>
       </main>} />
     </Routes>
+    <SessionBar />
   </div>;
 }
