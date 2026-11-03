@@ -27,7 +27,8 @@ h1, h2, h3, p { margin: 0; }
 .nav-item:focus-visible { background: var(--item-hover); }
 .nav-item.active { color: var(--primary); }
 .nav-item.active::after { background: var(--primary); }
-.main-nav .theme-toggle { align-self: center; white-space: nowrap; }
+.main-nav .theme-toggle { align-self: center; flex-shrink: 0; width: var(--control-height); height: var(--control-height); padding: 0; }
+.theme-toggle svg { display: block; flex-shrink: 0; }
 .page { padding-top: 24px; padding-bottom: 40px; }
 .page-heading { margin-bottom: 24px; }
 .page-heading h1 { font-size: var(--text-xl); font-weight: 600; line-height: 1.4; overflow-wrap: anywhere; }
@@ -182,11 +183,11 @@ h1, h2, h3, p { margin: 0; }
 }
 @media (max-width: 560px) {
   :root { --control-height: 44px; }
-  .header-inner { flex-direction: column; gap: 8px; padding-top: 16px; }
+  .header-inner { position: relative; flex-direction: column; gap: 8px; padding-top: 16px; }
   .header-inner, .page { padding-inline: 16px; }
   .brand { align-self: flex-start; }
   .main-nav { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px 16px; }
-  .main-nav .theme-toggle { grid-column: 1 / -1; justify-self: start; margin-bottom: 8px; padding-inline: 0; }
+  .main-nav .theme-toggle { position: absolute; top: 12px; right: 16px; }
   .nav-item { min-height: 44px; }
   .page { padding-top: 24px; }
   .page-heading { margin-bottom: 24px; }

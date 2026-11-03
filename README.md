@@ -1,6 +1,6 @@
-# Nhịp Tập - LTWNC TH02, Phần 1–3
+# Nhịp Tập - LTWNC TH02, Phần 1–4
 
-Đã triển khai **Phần 1: Kho 10.000 bài tập**, **Phần 2: Đồng hồ buổi tập, bài tập đã lưu bằng Zustand** và **Phần 3: Giáo án, giao diện sáng/tối, tải trang theo route**. Phần 4 chỉ thực hiện khi người dùng yêu cầu.
+Đã triển khai **Phần 1: Kho 10.000 bài tập**, **Phần 2: Đồng hồ buổi tập, bài tập đã lưu bằng Zustand**, **Phần 3: Giáo án, giao diện sáng/tối, tải trang theo route** và **Phần 4: Vitest, React Testing Library, coverage**.
 
 ## Chạy ứng dụng
 
@@ -30,7 +30,7 @@ npm run preview
 - `src/components/ui/ScrollbarAutohide.tsx`: thanh cuộn mảnh, hiện khi rê chuột hoặc đang cuộn, dọn listener và timer khi unmount.
 - Font Inter được phục vụ từ `public/fonts/InterVariable.woff2`; giấy phép trong `public/fonts/LICENSE-Inter.txt`. Ứng dụng không cần gọi Google Fonts khi chạy.
 
-Trang `/saved`, `/routines`, `/routines/:id` và thanh buổi tập dùng cùng header, kiểu chữ, nút và màu sắc. Chế độ tối chuyển sang nền nâu đen, giữ điểm nhấn nâu ấm; tất cả màu ở `tokens.css`. Chưa triển khai bộ kiểm thử của Phần 4.
+Trang `/saved`, `/routines`, `/routines/:id` và thanh buổi tập dùng cùng header, kiểu chữ, nút và màu sắc. Chế độ tối chuyển sang nền nâu đen, giữ điểm nhấn nâu ấm; tất cả màu ở `tokens.css`. Nút chuyển màu dùng icon mặt trăng/mặt trời, có nhãn truy cập và tooltip.
 
 Khi triển khai phần sau, tái sử dụng component và token trên. Ô nhập dùng `.input`, nhãn dùng `.field-label`, tên trang dùng `.page-heading`; tránh thêm bảng màu hoặc font riêng theo từng trang.
 
@@ -93,7 +93,7 @@ Khi triển khai phần sau, tái sử dụng component và token trên. Ô nh�
 - `/routines`: tạo, đếm số bài, mở chi tiết và xóa giáo án. Tên được trim; chặn tên trống và tên trùng không phân biệt hoa/thường.
 - Kho bài tập có ô **Giáo án đang chọn** và nút **+ Giáo án** trên từng dòng. Chưa có giáo án thì nút bị khóa; bài đã có cũng bị khóa để tránh thêm trùng. Ô chọn dùng chung `SelectField`, bảng giữ dòng 56px và cuộn ngang khi cần.
 - `/routines/:id`: hiển thị tên, các bài và nút Bỏ; tính tổng thời gian bằng `reduce`; **Tập tất cả** đưa đúng thứ tự bài trong giáo án vào Zustand session. Có trạng thái giáo án rỗng và không tìm thấy giáo án.
-- `src/contexts/ThemeContext.tsx`: Context riêng chứa `theme: 'light' | 'dark'` và `toggleTheme`, value bọc `useMemo`. Nút trên menu đổi nhãn Giao diện tối/Giao diện sáng. Lựa chọn được nhớ ở `workout-theme`.
+- `src/contexts/ThemeContext.tsx`: Context riêng chứa `theme: 'light' | 'dark'` và `toggleTheme`, value bọc `useMemo`. Nút trên menu đổi giữa icon mặt trăng và mặt trời, với aria-label/tooltip Giao diện tối/Giao diện sáng. Lựa chọn được nhớ ở `workout-theme`.
 - Ba trang Đã lưu, Giáo án và Chi tiết giáo án dùng `React.lazy` + `Suspense` với trạng thái Đang tải trang...; build tạo ba file JS riêng. Header và thanh đồng hồ nằm ngoài Suspense nên tiếp tục hiển thị khi tải route.
 
 ## Kiểm tra Phần 3
@@ -114,6 +114,34 @@ Khi triển khai phần sau, tái sử dụng component và token trên. Ô nh�
 | Chạy `npm run build` | Có SavedPage, RoutinesPage, RoutineDetailPage thành file JS riêng |
 
 Cách tách Context và tải component theo route theo tài liệu [React Context + reducer](https://react.dev/learn/scaling-up-with-reducer-and-context) và [React.lazy](https://react.dev/reference/react/lazy).
+
+## Nội dung Phần 4
+
+```powershell
+npm test
+npm run test:watch
+npm run coverage
+```
+
+- `vitest.config.ts`: dùng jsdom và V8 coverage; quét toàn bộ file nguồn trong `src/features` và `src/utils`, chỉ loại file test. Ngưỡng Lines 70% được đặt cho cả hai thư mục và toàn bộ báo cáo.
+- `src/setupTests.ts`: jest-dom, dọn DOM/timer, đặt lại Zustand và localStorage giữa các test. Chỉ mô phỏng các API layout chưa có trong jsdom: ResizeObserver, matchMedia, scrollIntoView.
+- `src/test-utils.tsx`: `renderWithProviders` bọc ThemeProvider, RoutineProvider và MemoryRouter, cho phép chọn route và dữ liệu giáo án ban đầu.
+- Có **52 test trong 15 file**, đặt cạnh file nguồn, tên mô tả bằng tiếng Việt. Bao gồm đầy đủ các trường hợp bắt buộc: định dạng thời gian, 10.000 ID duy nhất, reducer, session store, debounce 300ms, callback của ExerciseRow và tạo giáo án bằng userEvent.
+- Các test bổ sung kiểm tra lọc/sắp xếp và danh sách ảo hóa, giáo án trùng, tổng thời gian, lưu và khôi phục dữ liệu, đồng hồ tạm dừng/tiếp tục và dọn interval, cùng icon sáng/tối.
+
+Kết quả chạy ngày 03/11/2026: `npm test` và `npm run coverage` đều đạt **52/52 test**, `npm run build` thành công.
+
+| Phạm vi | Lines |
+| --- | --- |
+| `src/features` (12 file nguồn) | 100% — 236/236 |
+| `src/utils` (1 file nguồn) | 100% — 2/2 |
+| Tổng | 100% — 238/238 |
+
+Statements đạt 98,47%; Branches đạt 94,32%; Functions đạt 100%. Báo cáo HTML ở `coverage/index.html`, số liệu gốc ở `coverage/coverage-summary.json` và `coverage/coverage-final.json`.
+
+`coverage.png` ở gốc dự án là ảnh bảng được dựng trực tiếp từ báo cáo V8 thực tế. Công cụ trình duyệt không kết nối nên ảnh này không phải ảnh chụp màn hình trình duyệt. Thư mục `coverage/` được bỏ qua trong `.gitignore`; ảnh `coverage.png` được giữ để nộp bài.
+
+Thiết lập kiểm thử theo tài liệu [Vitest Coverage](https://vitest.dev/guide/coverage.html) và [React Testing Library Setup](https://testing-library.com/docs/react-testing-library/setup/).
 
 Trên màn hình nhỏ, bộ lọc xếp dọc và vùng bảng cuộn ngang riêng để giữ đầy đủ các cột và chiều cao dòng 56px.
 
